@@ -8,8 +8,6 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
 
-from config import config
-
 db = SQLAlchemy()
 login_manager = LoginManager()
 csrf = CSRFProtect()
@@ -23,7 +21,9 @@ def create_app(config_name=None):
 
     app = Flask(__name__, instance_relative_config=True)
 
-    config_class = config.get(config_name, config['default'])
+    # Import config here to avoid circular issues
+    from config import config as config_dict
+    config_class = config_dict.get(config_name, config_dict['default'])
     app.config.from_object(config_class)
 
     project_root = os.path.abspath(os.path.dirname(__file__))
@@ -40,31 +40,28 @@ def create_app(config_name=None):
     login_manager.login_message = 'Please log in to access this page.'
     login_manager.login_message_category = 'warning'
 
-    # DEBUG
+    # CRITICAL: Create DB directory BEFORE any DB operation
     db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', 'NOT SET')
-    print(f"[NEXUS DEBUG] Database URI: {db_uri}", flush=True)
+    print(f"[NEXUS] Database URI: {db_uri}", flush=True)
 
-    # Ensure SQLite database directory exists - handles BOTH absolute and relative paths
     if db_uri.startswith('sqlite:///'):
-        # Remove 'sqlite:///' prefix
-        db_path = db_uri[10:]
-        print(f"[NEXUS DEBUG] Raw database path: {db_path}", flush=True)
+        path_part = db_uri[10:]  # after sqlite:///
+        print(f"[NEXUS] Path part: {path_part}", flush=True)
 
-        # If it's an absolute path (starts with /), use it directly
-        # If it's relative (no leading /), resolve it relative to app root
-        if not db_path.startswith('/'):
-            db_path = os.path.join(app.root_path, db_path)
-            print(f"[NEXUS DEBUG] Resolved relative path to: {db_path}", flush=True)
+        if path_part.startswith('/'):
+            db_dir = os.path.dirname(path_part)
+        else:
+            # Relative path - resolve against app root
+            db_dir = os.path.dirname(os.path.join(app.root_path, path_part))
 
-        db_dir = os.path.dirname(db_path)
-        print(f"[NEXUS DEBUG] Database directory: {db_dir}", flush=True)
+        print(f"[NEXUS] DB directory: {db_dir}", flush=True)
 
         if db_dir:
             try:
                 os.makedirs(db_dir, exist_ok=True)
-                print(f"[NEXUS DEBUG] Directory ready: {db_dir}", flush=True)
+                print(f"[NEXUS] Created/verified directory: {db_dir}", flush=True)
             except Exception as e:
-                print(f"[NEXUS DEBUG] FAILED to create {db_dir}: {e}", flush=True)
+                print(f"[NEXUS] ERROR creating {db_dir}: {e}", flush=True)
 
     from app.auth import bp as auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
@@ -87,9 +84,9 @@ def create_app(config_name=None):
     with app.app_context():
         try:
             db.create_all()
-            print("[NEXUS DEBUG] db.create_all() succeeded", flush=True)
+            print("[NEXUS] db.create_all() SUCCESS", flush=True)
         except Exception as e:
-            print(f"[NEXUS DEBUG] db.create_all() failed: {e}", flush=True)
+            print(f"[NEXUS] db.create_all() FAILED: {e}", flush=True)
             raise
 
     return app
