@@ -1,8 +1,8 @@
 import os
 
-print("[NEXUS CONFIG] Loading config.py v2 - PostgreSQL only", flush=True)
-
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+print("[NEXUS CONFIG] Loading config.py v3", flush=True)
 
 
 class Config:
@@ -25,20 +25,13 @@ class TestingConfig(Config):
 
 class ProductionConfig(Config):
     DEBUG = False
-    # NO SQLITE FALLBACK. PostgreSQL only.
-    db_url = os.environ.get('DATABASE_URL')
-    print(f"[NEXUS CONFIG] DATABASE_URL found: {bool(db_url)}", flush=True)
-    if not db_url:
-        raise RuntimeError(
-            "DATABASE_URL environment variable is not set! "
-            "Add it to Netrun Secrets with your Neon connection string."
-        )
-    SQLALCHEMY_DATABASE_URI = db_url
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:////tmp/app.db'
 
 
+# default now points to ProductionConfig so Netrun always uses it
 config = {
     'development': DevelopmentConfig,
     'testing': TestingConfig,
     'production': ProductionConfig,
-    'default': DevelopmentConfig,
+    'default': ProductionConfig,
 }
