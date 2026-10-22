@@ -2,7 +2,7 @@ import os
 from app import create_app
 from app.extensions import db
 
-config_name = os.environ.get('FLASK_CONFIG', 'config.DevelopmentConfig')
+config_name = os.environ.get('FLASK_CONFIG', 'development')
 app = create_app(config_name)
 
 if __name__ == '__main__':
