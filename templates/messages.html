@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-chat-dots"></i> Messages</h2>
+
+<div class="card shadow-sm p-4 mb-4">
+    <h5>Send a Message</h5>
+    <form method="post">
+        {{ form.hidden_tag() }}
+
+        <div class="mb-3">
+            {{ form.receiver_id.label(class="form-label") }}
+            {{ form.receiver_id(class="form-select") }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.content.label(class="form-label") }}
+            {{ form.content(class="form-control" + (" is-invalid" if form.content.errors else "")) }}
+            {% for error in form.content.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        {{ form.submit(class="btn btn-primary w-100") }}
+    </form>
+</div>
+
+<div class="card shadow-sm p-4 mb-4">
+    <h5>Search Messages</h5>
+    <form method="get" class="d-flex gap-2">
+        {{ search_form.hidden_tag() }}
+        <input type="text" name="query" class="form-control" placeholder="Search messages..." value="{{ query or '' }}">
+        <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i></button>
+        {% if query %}
+            <a href="{{ url_for('messages.messages') }}" class="btn btn-outline-secondary">Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+<div class="card shadow-sm p-4">
+    <h5 class="mb-3">Message History</h5>
+
+    {% if messages.items %}
+    <table class="table table-hover">
+        <thead class="table-light">
+            <tr>
+                <th>Time</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Message</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for m in messages.items %}
+            <tr>
+                <td>{{ m.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>{{ m.sender.username }}</td>
+                <td>{{ m.receiver.username }}</td>
+                <td>{{ m.content }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <nav>
+        <ul class="pagination justify-content-center">
+            {% if messages.has_prev %}
+                <li class="page-item"><a class="page-link" href="{{ url_for('messages.messages', page=messages.prev_num, query=query) }}">Previous</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Previous</span></li>
+            {% endif %}
+
+            {% if messages.has_next %}
+                <li class="page-item"><a class="page-link" href="{{ url_for('messages.messages', page=messages.next_num, query=query) }}">Next</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Next</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% else %}
+        <p class="text-muted">No messages found.</p>
+    {% endif %}
+</div>
+{% endblock %}
