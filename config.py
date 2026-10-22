@@ -6,8 +6,6 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-me'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-
-    # Flask-Limiter storage
     RATELIMIT_STORAGE_URI = os.environ.get('RATELIMIT_STORAGE_URI') or 'memory://'
 
 
@@ -25,7 +23,7 @@ class TestingConfig(Config):
 
 class ProductionConfig(Config):
     DEBUG = False
-    # Netrun persists /data across redeploys, but fallback to /app/data if /data is not writable
+    # 4 slashes = absolute path /data/app.db
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:////data/app.db'
 
 
