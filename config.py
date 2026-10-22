@@ -23,7 +23,7 @@ class TestingConfig(Config):
 
 class ProductionConfig(Config):
     DEBUG = False
-    # 4 slashes = absolute path /data/app.db
+    # Use /data for Netrun persistence. 4 slashes = absolute path.
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:////data/app.db'
 
 
