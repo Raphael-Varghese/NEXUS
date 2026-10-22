@@ -40,29 +40,29 @@ def create_app(config_name=None):
     login_manager.login_message = 'Please log in to access this page.'
     login_manager.login_message_category = 'warning'
 
-    # CRITICAL: Create DB directory BEFORE any DB operation
+    # Ensure SQLite database directory exists
     db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', 'NOT SET')
     print(f"[NEXUS] Database URI: {db_uri}", flush=True)
 
-    if db_uri.startswith('sqlite:///'):
-        path_part = db_uri[10:]  # after sqlite:///
-        print(f"[NEXUS] Path part: {path_part}", flush=True)
+    if db_uri.startswith('sqlite://'):
+        # Extract the actual file path from the URI
+        # sqlite:////tmp/app.db  -> /tmp/app.db
+        # sqlite:///data/app.db  -> data/app.db (relative, broken)
+        path = db_uri.replace('sqlite://', '')
+        if not path.startswith('/'):
+            # Relative path - resolve against current working directory
+            path = os.path.join(os.getcwd(), path)
+            print(f"[NEXUS] Resolved relative path to: {path}", flush=True)
 
-        if path_part.startswith('/'):
-            db_dir = os.path.dirname(path_part)
-        else:
-            # Relative path - resolve against app root
-            db_dir = os.path.dirname(os.path.join(app.root_path, path_part))
-
-        print(f"[NEXUS] DB directory: {db_dir}", flush=True)
-
+        db_dir = os.path.dirname(path)
         if db_dir:
             try:
                 os.makedirs(db_dir, exist_ok=True)
-                print(f"[NEXUS] Created/verified directory: {db_dir}", flush=True)
+                print(f"[NEXUS] Directory ready: {db_dir}", flush=True)
             except Exception as e:
-                print(f"[NEXUS] ERROR creating {db_dir}: {e}", flush=True)
+                print(f"[NEXUS] WARNING: Could not create {db_dir}: {e}", flush=True)
 
+    # Register blueprints
     from app.auth import bp as auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
 
@@ -81,6 +81,7 @@ def create_app(config_name=None):
     from app.profile import bp as profile_bp
     app.register_blueprint(profile_bp, url_prefix='/profile')
 
+    # Create database tables
     with app.app_context():
         try:
             db.create_all()
