@@ -23,27 +23,7 @@ def create_app(config_name=None):
 
     from config import config as config_dict
     config_class = config_dict.get(config_name, config_dict['default'])
-    
-    # CRITICAL DEBUG: tell us which config was selected
-    print(f"[NEXUS] FLASK_CONFIG env var: '{config_name}'", flush=True)
-    print(f"[NEXUS] Selected config class: {config_class.__name__}", flush=True)
-    
     app.config.from_object(config_class)
-
-    # NUCLEAR OVERRIDE: if DATABASE_URL exists, force it no matter what config loaded
-    db_url = os.environ.get('DATABASE_URL')
-    if db_url:
-        # Safe log: only show first 25 chars (postgresql://...) so secret stays safe
-        print(f"[NEXUS] DATABASE_URL starts with: {db_url[:25]}...", flush=True)
-        if not db_url.startswith('postgresql'):
-            raise RuntimeError(
-                f"DATABASE_URL is not a PostgreSQL URL! It starts with: {db_url[:20]}. "
-                f"Go to Netrun Secrets and fix it."
-            )
-        app.config['SQLALCHEMY_DATABASE_URI'] = db_url
-        print("[NEXUS] FORCED PostgreSQL database", flush=True)
-    else:
-        print("[NEXUS] WARNING: DATABASE_URL not set!", flush=True)
 
     project_root = os.path.abspath(os.path.dirname(__file__))
     if project_root not in sys.path:
@@ -79,6 +59,5 @@ def create_app(config_name=None):
 
     with app.app_context():
         db.create_all()
-        print("[NEXUS] Database tables ready", flush=True)
 
     return app
