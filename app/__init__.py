@@ -21,14 +21,6 @@ def create_app(config_name=None):
     if config_name is None:
         config_name = os.environ.get('FLASK_CONFIG', 'default')
 
-    # Map string names to config classes
-    config_map = {
-        'development': 'config.DevelopmentConfig',
-        'testing': 'config.TestingConfig',
-        'production': 'config.ProductionConfig',
-        'default': 'config.DevelopmentConfig',
-    }
-
     app = Flask(__name__, instance_relative_config=True)
 
     # Load config
@@ -51,14 +43,32 @@ def create_app(config_name=None):
     login_manager.login_message = 'Please log in to access this page.'
     login_manager.login_message_category = 'warning'
 
+    # DEBUG: print the database URI so we can see it in logs
+    db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', 'NOT SET')
+    print(f"[NEXUS DEBUG] Database URI: {db_uri}", flush=True)
+
     # Ensure SQLite database directory exists
-    db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
     if db_uri.startswith('sqlite:///'):
         db_path = db_uri[10:]  # Remove 'sqlite:///'
+        print(f"[NEXUS DEBUG] Database file path: {db_path}", flush=True)
+
         if db_path.startswith('/'):
             db_dir = os.path.dirname(db_path)
+            print(f"[NEXUS DEBUG] Database directory: {db_dir}", flush=True)
+
             if db_dir:
-                os.makedirs(db_dir, exist_ok=True)
+                try:
+                    os.makedirs(db_dir, exist_ok=True)
+                    print(f"[NEXUS DEBUG] Directory created or already exists: {db_dir}", flush=True)
+                except Exception as e:
+                    print(f"[NEXUS DEBUG] FAILED to create directory {db_dir}: {e}", flush=True)
+                    # Fallback: use /app/data instead
+                    fallback_path = '/app/data'
+                    try:
+                        os.makedirs(fallback_path, exist_ok=True)
+                        print(f"[NEXUS DEBUG] Using fallback directory: {fallback_path}", flush=True)
+                    except Exception as e2:
+                        print(f"[NEXUS DEBUG] Fallback also failed: {e2}", flush=True)
 
     # Register blueprints
     from app.auth import bp as auth_bp
@@ -81,6 +91,11 @@ def create_app(config_name=None):
 
     # Create database tables if they do not exist
     with app.app_context():
-        db.create_all()
+        try:
+            db.create_all()
+            print("[NEXUS DEBUG] db.create_all() succeeded", flush=True)
+        except Exception as e:
+            print(f"[NEXUS DEBUG] db.create_all() failed: {e}", flush=True)
+            raise
 
     return app
