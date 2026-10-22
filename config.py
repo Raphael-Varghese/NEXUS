@@ -25,7 +25,7 @@ class TestingConfig(Config):
 
 class ProductionConfig(Config):
     DEBUG = False
-    # Netrun persists /data across redeploys; instance/ does not
+    # Netrun persists /data across redeploys, but fallback to /app/data if /data is not writable
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:////data/app.db'
 
 
