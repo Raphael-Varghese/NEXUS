@@ -17,13 +17,33 @@ migrate = Migrate()
 
 def create_app(config_name=None):
     if config_name is None:
-        config_name = os.environ.get('FLASK_CONFIG', 'default')
+        config_name = os.environ.get('FLASK_CONFIG', 'production')
 
     app = Flask(__name__, instance_relative_config=True)
 
     from config import config as config_dict
     config_class = config_dict.get(config_name, config_dict['default'])
+    
+    # CRITICAL DEBUG: tell us which config was selected
+    print(f"[NEXUS] FLASK_CONFIG env var: '{config_name}'", flush=True)
+    print(f"[NEXUS] Selected config class: {config_class.__name__}", flush=True)
+    
     app.config.from_object(config_class)
+
+    # NUCLEAR OVERRIDE: if DATABASE_URL exists, force it no matter what config loaded
+    db_url = os.environ.get('DATABASE_URL')
+    if db_url:
+        # Safe log: only show first 25 chars (postgresql://...) so secret stays safe
+        print(f"[NEXUS] DATABASE_URL starts with: {db_url[:25]}...", flush=True)
+        if not db_url.startswith('postgresql'):
+            raise RuntimeError(
+                f"DATABASE_URL is not a PostgreSQL URL! It starts with: {db_url[:20]}. "
+                f"Go to Netrun Secrets and fix it."
+            )
+        app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+        print("[NEXUS] FORCED PostgreSQL database", flush=True)
+    else:
+        print("[NEXUS] WARNING: DATABASE_URL not set!", flush=True)
 
     project_root = os.path.abspath(os.path.dirname(__file__))
     if project_root not in sys.path:
@@ -38,13 +58,6 @@ def create_app(config_name=None):
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Please log in to access this page.'
     login_manager.login_message_category = 'warning'
-
-    # Log database type (no sensitive info)
-    db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', 'NOT SET')
-    if db_uri.startswith('postgresql'):
-        print("[NEXUS] Using PostgreSQL database", flush=True)
-    elif db_uri.startswith('sqlite'):
-        print(f"[NEXUS] Using SQLite database: {db_uri}", flush=True)
 
     from app.auth import bp as auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
