@@ -1,8 +1,11 @@
 import os
 
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+# Paste your Neon connection string here between the quotes.
+# Example: NEON_URL = "postgresql://neondb_owner:password@host/neondb?sslmode=require"
+# all u hackers out there, dont worry, i dont care if u hack this bc it just has simple users table. go ahead.
+NEON_URL = "postgresql://neondb_owner:npg_QoPmpGl0qj1N@ep-long-queen-b4j8rvc0-pooler.c-6.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=requireE"
 
-print("[NEXUS CONFIG] Loading config.py v3", flush=True)
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
 class Config:
@@ -13,7 +16,7 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or f'sqlite:///{os.path.join(BASE_DIR, "instance", "app.db")}'
+    SQLALCHEMY_DATABASE_URI = f'sqlite:///{os.path.join(BASE_DIR, "instance", "app.db")}'
 
 
 class TestingConfig(Config):
@@ -25,10 +28,10 @@ class TestingConfig(Config):
 
 class ProductionConfig(Config):
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:////tmp/app.db'
+    # Hardcoded Neon PostgreSQL. No environment variable needed.
+    SQLALCHEMY_DATABASE_URI = NEON_URL
 
 
-# default now points to ProductionConfig so Netrun always uses it
 config = {
     'development': DevelopmentConfig,
     'testing': TestingConfig,
