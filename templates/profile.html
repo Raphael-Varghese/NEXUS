@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-person"></i> Profile</h2>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm p-4">
+            <h5 class="mb-3">Edit Profile</h5>
+            <form method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label class="form-label">Username</label>
+                    <input name="username" class="form-control" value="{{ user.username }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Role</label>
+                    <input class="form-control" value="{{ 'Administrator' if user.is_admin else 'Standard User' }}" disabled>
+                </div>
+                <button class="btn btn-primary w-100">Update Profile</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm p-4">
+            <h5 class="mb-3">Activity Stats</h5>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>Pending Tasks</span>
+                    <span class="badge bg-warning text-dark">{{ pending }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>Completed Tasks</span>
+                    <span class="badge bg-success">{{ completed }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>Messages Sent</span>
+                    <span class="badge bg-info text-dark">{{ sent }}</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
