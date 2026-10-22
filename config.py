@@ -23,7 +23,8 @@ class TestingConfig(Config):
 
 class ProductionConfig(Config):
     DEBUG = False
-    # /tmp is always writable. Data resets when container restarts (Netrun sleep).
+    # Uses Neon PostgreSQL via DATABASE_URL from Netrun Secrets
+    # Falls back to /tmp SQLite only if DATABASE_URL is missing
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:////tmp/app.db'
 
 
