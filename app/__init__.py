@@ -1,12 +1,30 @@
 import os
+import sys
 from flask import Flask
-from config import Config
 from app.extensions import db, login_manager, csrf, limiter, migrate
 
-def create_app(config_class=Config):
-    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    app = Flask(__name__, template_folder=os.path.join(base_dir, 'templates'))
-    app.config.from_object(config_class)
+def create_app(config_name=None):
+    if config_name is None:
+        config_name = os.environ.get('FLASK_CONFIG', 'development')
+
+    config_map = {
+        'development': 'config.DevelopmentConfig',
+        'production': 'config.ProductionConfig',
+        'testing': 'config.TestingConfig',
+        'config.DevelopmentConfig': 'config.DevelopmentConfig',
+        'config.ProductionConfig': 'config.ProductionConfig',
+        'config.TestingConfig': 'config.TestingConfig',
+    }
+
+    config_path = config_map.get(config_name, 'config.DevelopmentConfig')
+
+    # Ensure project root is in path for config.py import in Docker
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+
+    app = Flask(__name__, template_folder=os.path.join(project_root, 'templates'))
+    app.config.from_object(config_path)
 
     db.init_app(app)
     migrate.init_app(app, db)
