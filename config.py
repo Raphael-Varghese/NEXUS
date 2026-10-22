@@ -23,8 +23,8 @@ class TestingConfig(Config):
 
 class ProductionConfig(Config):
     DEBUG = False
-    # Use /data for Netrun persistence. 4 slashes = absolute path.
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:////data/app.db'
+    # /tmp is always writable. Data resets when container restarts (Netrun sleep).
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:////tmp/app.db'
 
 
 config = {
