@@ -1,11 +1,11 @@
 flask
 flask-sqlalchemy
 flask-login
-flask-limiter
 flask-migrate
 flask-wtf
+flask-limiter
 werkzeug
 python-dotenv
+email-validator
 gunicorn
-pytest
-pytest-flask
+psycopg2-binary==2.9.9
