@@ -1,0 +1,10 @@
+flask
+flask-sqlalchemy
+flask-login
+flask-limiter
+flask-migrate
+flask-wtf
+werkzeug
+python-dotenv
+pytest
+pytest-flask
