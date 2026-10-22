@@ -23,16 +23,13 @@ def create_app(config_name=None):
 
     app = Flask(__name__, instance_relative_config=True)
 
-    # Load config
     config_class = config.get(config_name, config['default'])
     app.config.from_object(config_class)
 
-    # Ensure project root is in path for config imports
     project_root = os.path.abspath(os.path.dirname(__file__))
     if project_root not in sys.path:
         sys.path.insert(0, project_root)
 
-    # Initialize extensions
     db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
@@ -43,34 +40,32 @@ def create_app(config_name=None):
     login_manager.login_message = 'Please log in to access this page.'
     login_manager.login_message_category = 'warning'
 
-    # DEBUG: print the database URI so we can see it in logs
+    # DEBUG
     db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', 'NOT SET')
     print(f"[NEXUS DEBUG] Database URI: {db_uri}", flush=True)
 
-    # Ensure SQLite database directory exists
+    # Ensure SQLite database directory exists - handles BOTH absolute and relative paths
     if db_uri.startswith('sqlite:///'):
-        db_path = db_uri[10:]  # Remove 'sqlite:///'
-        print(f"[NEXUS DEBUG] Database file path: {db_path}", flush=True)
+        # Remove 'sqlite:///' prefix
+        db_path = db_uri[10:]
+        print(f"[NEXUS DEBUG] Raw database path: {db_path}", flush=True)
 
-        if db_path.startswith('/'):
-            db_dir = os.path.dirname(db_path)
-            print(f"[NEXUS DEBUG] Database directory: {db_dir}", flush=True)
+        # If it's an absolute path (starts with /), use it directly
+        # If it's relative (no leading /), resolve it relative to app root
+        if not db_path.startswith('/'):
+            db_path = os.path.join(app.root_path, db_path)
+            print(f"[NEXUS DEBUG] Resolved relative path to: {db_path}", flush=True)
 
-            if db_dir:
-                try:
-                    os.makedirs(db_dir, exist_ok=True)
-                    print(f"[NEXUS DEBUG] Directory created or already exists: {db_dir}", flush=True)
-                except Exception as e:
-                    print(f"[NEXUS DEBUG] FAILED to create directory {db_dir}: {e}", flush=True)
-                    # Fallback: use /app/data instead
-                    fallback_path = '/app/data'
-                    try:
-                        os.makedirs(fallback_path, exist_ok=True)
-                        print(f"[NEXUS DEBUG] Using fallback directory: {fallback_path}", flush=True)
-                    except Exception as e2:
-                        print(f"[NEXUS DEBUG] Fallback also failed: {e2}", flush=True)
+        db_dir = os.path.dirname(db_path)
+        print(f"[NEXUS DEBUG] Database directory: {db_dir}", flush=True)
 
-    # Register blueprints
+        if db_dir:
+            try:
+                os.makedirs(db_dir, exist_ok=True)
+                print(f"[NEXUS DEBUG] Directory ready: {db_dir}", flush=True)
+            except Exception as e:
+                print(f"[NEXUS DEBUG] FAILED to create {db_dir}: {e}", flush=True)
+
     from app.auth import bp as auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
 
@@ -89,7 +84,6 @@ def create_app(config_name=None):
     from app.profile import bp as profile_bp
     app.register_blueprint(profile_bp, url_prefix='/profile')
 
-    # Create database tables if they do not exist
     with app.app_context():
         try:
             db.create_all()
