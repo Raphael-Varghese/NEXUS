@@ -21,7 +21,6 @@ def create_app(config_name=None):
 
     app = Flask(__name__, instance_relative_config=True)
 
-    # Import config here to avoid circular issues
     from config import config as config_dict
     config_class = config_dict.get(config_name, config_dict['default'])
     app.config.from_object(config_class)
@@ -40,29 +39,13 @@ def create_app(config_name=None):
     login_manager.login_message = 'Please log in to access this page.'
     login_manager.login_message_category = 'warning'
 
-    # Ensure SQLite database directory exists
+    # Log database type (no sensitive info)
     db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', 'NOT SET')
-    print(f"[NEXUS] Database URI: {db_uri}", flush=True)
+    if db_uri.startswith('postgresql'):
+        print("[NEXUS] Using PostgreSQL database", flush=True)
+    elif db_uri.startswith('sqlite'):
+        print(f"[NEXUS] Using SQLite database: {db_uri}", flush=True)
 
-    if db_uri.startswith('sqlite://'):
-        # Extract the actual file path from the URI
-        # sqlite:////tmp/app.db  -> /tmp/app.db
-        # sqlite:///data/app.db  -> data/app.db (relative, broken)
-        path = db_uri.replace('sqlite://', '')
-        if not path.startswith('/'):
-            # Relative path - resolve against current working directory
-            path = os.path.join(os.getcwd(), path)
-            print(f"[NEXUS] Resolved relative path to: {path}", flush=True)
-
-        db_dir = os.path.dirname(path)
-        if db_dir:
-            try:
-                os.makedirs(db_dir, exist_ok=True)
-                print(f"[NEXUS] Directory ready: {db_dir}", flush=True)
-            except Exception as e:
-                print(f"[NEXUS] WARNING: Could not create {db_dir}: {e}", flush=True)
-
-    # Register blueprints
     from app.auth import bp as auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
 
@@ -81,13 +64,8 @@ def create_app(config_name=None):
     from app.profile import bp as profile_bp
     app.register_blueprint(profile_bp, url_prefix='/profile')
 
-    # Create database tables
     with app.app_context():
-        try:
-            db.create_all()
-            print("[NEXUS] db.create_all() SUCCESS", flush=True)
-        except Exception as e:
-            print(f"[NEXUS] db.create_all() FAILED: {e}", flush=True)
-            raise
+        db.create_all()
+        print("[NEXUS] Database tables ready", flush=True)
 
     return app
