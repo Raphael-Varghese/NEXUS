@@ -6,7 +6,7 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - FLASK_CONFIG=config.ProductionConfig
+      - FLASK_CONFIG=production
       - SECRET_KEY=change-this-to-a-random-string-for-docker
       - DATABASE_URL=sqlite:///data/app.db
     volumes:
