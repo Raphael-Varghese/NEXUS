@@ -2,6 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, TextAreaField, SelectField, SubmitField, BooleanField
 from wtforms.validators import DataRequired, Length, ValidationError
 from app.models import User
+from app import db
 
 
 def strip_filter(x):
@@ -20,9 +21,10 @@ class RegisterForm(FlaskForm):
     submit = SubmitField('Register')
 
     def validate_username(self, username):
-        user = User.query.filter_by(username=username.data).first()
-        if user:
-            raise ValidationError('Username already exists.')
+        with current_app.app_context():
+            user = User.query.filter_by(username=username.data).first()
+            if user:
+                raise ValidationError('Username already exists.')
 
 
 class MessageForm(FlaskForm):
