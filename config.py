@@ -3,7 +3,7 @@ import os
 # Paste your Neon connection string here between the quotes.
 # Example: NEON_URL = "postgresql://neondb_owner:password@host/neondb?sslmode=require"
 # all u hackers out there, dont worry, i dont care if u hack this bc it just has simple users table. go ahead.
-NEON_URL = "postgresql+pg8000://neondb_owner:npg_QoPmpGl0qj1N@ep-long-queen-b4j8rvc0-pooler.c-6.us-east-2.aws.neon.tech/neondb?ssl=true"
+NEON_URL = "postgresql+pg8000://neondb_owner:npg_QoPmpGl0qj1N@ep-long-queen-b4j8rvc0-pooler.c-6.us-east-2.aws.neon.tech/neondb?sslmode=true"
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
