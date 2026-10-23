@@ -7,6 +7,7 @@ from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
+from models import User
 ssl_context = ssl.create_default_context()
 ssl_context.check_hostname = False
 ssl_context.verify_mode = ssl.CERT_NONE
@@ -15,7 +16,9 @@ login_manager = LoginManager()
 csrf = CSRFProtect()
 limiter = Limiter(key_func=lambda: "global")
 migrate = Migrate()
-
+@login_manager.user_loader
+def load_user(user_id):
+    return db.session.get(User, int(user_id))
 
 def create_app(config_name=None):
     if config_name is None:
