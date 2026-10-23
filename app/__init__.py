@@ -24,7 +24,9 @@ def create_app(config_name=None):
     if config_name is None:
         config_name = os.environ.get('FLASK_CONFIG', 'production')
 
-    app = Flask(__name__, template_folder=os.path.join(os.path.dirname(os.path.dirname(__file__)), '../templates'))
+    template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'templates'))
+
+    app = Flask(__name__, template_folder=template_dir)
 
     from config import config as config_dict
     config_class = config_dict.get(config_name, config_dict['default'])
