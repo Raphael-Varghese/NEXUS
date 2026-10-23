@@ -30,7 +30,7 @@ def create_app(config_name=None):
 
     from config import config as config_dict
     config_class = config_dict.get(config_name, config_dict['default'])
-    app.config.from_object(config_class)
+    app.config.from_object(Config)
 
     project_root = os.path.abspath(os.path.dirname(__file__))
     if project_root not in sys.path:
