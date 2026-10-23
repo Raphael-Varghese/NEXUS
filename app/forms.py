@@ -3,6 +3,7 @@ from wtforms import StringField, PasswordField, TextAreaField, SelectField, Subm
 from wtforms.validators import DataRequired, Length, ValidationError
 from app.models import User
 from app import db
+from flask import current_app
 
 
 def strip_filter(x):
